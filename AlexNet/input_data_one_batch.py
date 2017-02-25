@@ -14,7 +14,7 @@ from scipy import misc
 MINIMUM_FILE_SIZE = 5000
 
 #IMAGENET_LINKS_URL = "http://www.image-net.org/api/text/imagenet.synset.geturls?wnid="
-IMAGE_DIRECTORY = "/home/litian/data_20000"
+IMAGE_DIRECTORY = "/home/litian/data/very_small"
 #URL_DIRECTORY = os.path.join(IMAGE_DIRECTORY, "bad_urls")
 
 RAW_IMAGE_HEIGHT = 256
@@ -38,12 +38,7 @@ IMAGE_WIDTH = 224
 #     file_name = class_id + ".txt"
 #     file_path = os.path.join(URL_DIRECTORY, file_name)
 
-#     if not os.path.exists(file_path):
-#         return True
-
-#     if url in open(file_path).read():
-#         return False
-
+#     if not os.path.exists(file_p
 #     return True
 
 
@@ -216,20 +211,20 @@ def load_all_images(class_ids, num_images):
     num_classes = len(class_ids)
     all_images = []
     all_labels = []
-#    mark = 300
+    mark = 300
 
     for index, class_id in enumerate(class_ids):
         print ("%d,%s",index, class_id)
         
         class_path = os.path.join(IMAGE_DIRECTORY, class_id)
-        if os.path.isdir(class_path):
+        if os.path.isdir(class_path) and mark > 0:
             files = [f for f in os.listdir(class_path) if os.path.isfile(os.path.join(class_path, f))]
             num_class_files = min(len(files), num_images) #
             print num_class_files
- #               if num_class_files > 0:
-  #                  mark = mark - 1
-            for n in range(0, num_class_files):
-	        image = load_image_as_array(os.path.join(class_path, files[n]))
+            if num_class_files > 0:
+                mark = mark - 1
+              #  for n in range(0, num_class_files):
+	        image = load_image_as_array(os.path.join(class_path, files[0]))
                     # till now, it is correct
                 all_images.append(image)
                 all_labels.append(create_one_hot_vector(index, num_classes))
@@ -358,9 +353,12 @@ def create_datasets(class_ids, num_samples=1000, val_fraction=0.2, test_fraction
 
     validation_size = int(total_num_images * val_fraction)
     test_size = int(total_num_images * test_fraction)
+    train_size = total_num_images - validation_size - test_size
+    train_images = all_images[:train_size]
+    train_labels = all_labels[:train_size]
 
-    validation_images = all_images[:validation_size]
-    validation_labels = all_labels[:validation_size]
+    validation_images = all_images[train_size:train_size+validation_size]
+    validation_labels = all_labels[train_size:train_size + validation_size]
 
     #im1 = Image.formarray(validation_images[0])
 
@@ -368,11 +366,11 @@ def create_datasets(class_ids, num_samples=1000, val_fraction=0.2, test_fraction
 
     print validation_labels[0]
 
-    test_images = all_images[validation_size:validation_size + test_size]
-    test_labels = all_labels[validation_size:validation_size + test_size]
+    test_images = all_images[validation_size+train_size:]
+    test_labels = all_labels[validation_size+train_size:]
 
-    train_images = all_images[validation_size + test_size:]
-    train_labels = all_labels[validation_size + test_size:]
+    #train_images = all_images[validation_size + test_size:]
+    #train_labels = all_labels[validation_size + test_size:]
 
     # Mean normalization
     training_mean = np.mean(train_images)

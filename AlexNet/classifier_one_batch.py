@@ -1,6 +1,6 @@
 import input_data
 import sys
-from input_data import create_datasets
+from input_data_one_batch import create_datasets
 import numpy as np
 import tensorflow as tf
 import time
@@ -129,7 +129,7 @@ sess = tf.Session()
 #val_writer = tf.train.SummaryWriter(summaries_dir + '/val')
 sess.run(tf.initialize_all_variables()) # need to use tf.global_variables_initializer instead
 
-val_images, val_labels = val_dataset.next_batch(200)
+val_images, val_labels = val_dataset.next_batch(20)
 
 for i in range(200000):
     image_batch, label_batch = train_dataset.next_batch(180, random_crop=True)
