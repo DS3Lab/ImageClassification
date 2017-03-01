@@ -46,7 +46,7 @@ num_classes = len(classes)
 print num_classes
 
 # replace with GPU
-with tf.device('/gpu:1'):
+with tf.device('/gpu:0'):
 # Placeholders
     x = tf.placeholder(tf.float32, shape=[None, input_data.IMAGE_WIDTH * input_data.IMAGE_HEIGHT, 3])
     y_ = tf.placeholder(tf.float32, shape=[None, num_classes])
@@ -123,16 +123,21 @@ with tf.device('/gpu:1'):
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 #tf.scalar_summary('accuracy', accuracy)
 
-sess = tf.Session()
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+
+sess = tf.Session(config = config)
+sess.run(tf.initialize_all_variables())
+#sess = tf.Session()
 #merged = tf.merge_all_summaries()
 #train_writer = tf.train.SummaryWriter(summaries_dir + '/train', sess.graph)
 #val_writer = tf.train.SummaryWriter(summaries_dir + '/val')
-sess.run(tf.initialize_all_variables()) # need to use tf.global_variables_initializer instead
+#sess.run(tf.initialize_all_variables()) # need to use tf.global_variables_initializer instead
 
 val_images, val_labels = val_dataset.next_batch(20)
 
 for i in range(200000):
-    image_batch, label_batch = train_dataset.next_batch(180, random_crop=True)
+    image_batch, label_batch = train_dataset.next_batch(90, random_crop=True)
     if ( i * 180 > 4000 * 100):
         sess.run(train_step, feed_dict={x: image_batch, y_: label_batch, keep_prob: 0.5})
     else:
@@ -140,11 +145,13 @@ for i in range(200000):
     if i % 5 == 0:
         train_accuracy = sess.run(accuracy,feed_dict={x: image_batch, y_: label_batch, keep_prob: 1.0})
         #train_writer.add_summary(summary, i)
-        train_cost, y_2,y_3 = sess.run([cross_entropy,y_max, y_label_max], feed_dict={x: image_batch, y_: label_batch, keep_prob: 1.0})
+        train_cost, y_2,y_3, y_4 = sess.run([cross_entropy,y_max, y_label_max, y_logit], feed_dict={x: image_batch, y_: label_batch, keep_prob: 1.0})
         localtime = time.asctime(time.localtime(time.time()))
         print localtime
 	assert y_3 > 0
 	print y_2, y_3
+	print tf.size(y_4)
+	print tf.shape(y_4)
         print("step %d, training accuracy %g, cost %g" % (i, train_accuracy, train_cost))
 
     if i % 25 == 0:

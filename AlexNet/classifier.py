@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 import time
 
-NUM_IMAGES = 1000
+NUM_IMAGES = 1000 # maximum number of images under a class, can be changed
 
 def weight_variable(shape):
     initial = tf.truncated_normal(shape, stddev=0.1)
@@ -34,19 +34,19 @@ def fc_batch_normalization(x):
 
 
 list_ = []
-for line in open("/home/litian/data/label.txt"):
+for line in open("/mnt/ds3lab/tf_imagenet/label.txt"):
     list_.append(['a', line.strip('\n')])
 classes = np.array(list_)
 print len(classes)
 
 
-train_dataset, val_dataset, test_dataset = create_datasets(classes[:, 1], num_samples=NUM_IMAGES, val_fraction=0.2,
-                                                           test_fraction=0.2)
+train_dataset, val_dataset, test_dataset = create_datasets(classes[:, 1], num_samples=NUM_IMAGES, val_fraction=0.1,
+                                                           test_fraction=0.1)
 num_classes = len(classes)
 print num_classes
-
-# replace with GPU
-with tf.device('/gpu:1'):
+#print ALL_IMAGES_NUM
+# can change the device here
+with tf.device('/gpu:0'):
 # Placeholders
     x = tf.placeholder(tf.float32, shape=[None, input_data.IMAGE_WIDTH * input_data.IMAGE_HEIGHT, 3])
     y_ = tf.placeholder(tf.float32, shape=[None, num_classes])
@@ -115,28 +115,31 @@ with tf.device('/gpu:1'):
 # # Training
     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y_score, labels=y_))
 # #tf.scalar_summary('xentropy', cross_entropy)
-    train_step = tf.train.AdamOptimizer(0.01).minimize(cross_entropy)
-    train_step2 = tf.train.AdamOptimizer(0.005).minimize(cross_entropy)
+    train_step = tf.train.AdamOptimizer(learning_rate=0.01).minimize(cross_entropy)
+# suggest learning rate to be 0.01
+#    train_step2 = tf.train.AdamOptimizer(float(LEARNING_RATE)*1.0/2.0).minimize(cross_entropy)
     correct_prediction = tf.equal(tf.argmax(y_logit, 1), tf.argmax(y_, 1))
     y_max = tf.reduce_min(tf.reduce_max(y_logit,1))
     y_label_max = tf.reduce_max(y_)
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 #tf.scalar_summary('accuracy', accuracy)
 
-sess = tf.Session()
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+sess = tf.Session(config=config)
 #merged = tf.merge_all_summaries()
 #train_writer = tf.train.SummaryWriter(summaries_dir + '/train', sess.graph)
 #val_writer = tf.train.SummaryWriter(summaries_dir + '/val')
 sess.run(tf.initialize_all_variables()) # need to use tf.global_variables_initializer instead
 
-val_images, val_labels = val_dataset.next_batch(200)
-
+val_images, val_labels = val_dataset.next_batch(20)
+test_images, test_labels = test_dataset.next_batch(int(input_data.all_images_num*0.1))
 for i in range(200000):
     image_batch, label_batch = train_dataset.next_batch(180, random_crop=True)
-    if ( i * 180 > 4000 * 100):
-        sess.run(train_step, feed_dict={x: image_batch, y_: label_batch, keep_prob: 0.5})
-    else:
-        sess.run(train_step2, feed_dict={x: image_batch, y_: label_batch, keep_prob: 0.5})
+ #   if ( i * TRAIN_BATCH_SIZE > NUM_IMAGES* test_fraction * 100):
+  #      sess.run(train_step, feed_dict={x: image_batch, y_: label_batch, keep_prob: 0.5})
+   # else:
+    sess.run(train_step, feed_dict={x: image_batch, y_: label_batch, keep_prob: 0.5})
     if i % 5 == 0:
         train_accuracy = sess.run(accuracy,feed_dict={x: image_batch, y_: label_batch, keep_prob: 1.0})
         #train_writer.add_summary(summary, i)
@@ -145,10 +148,8 @@ for i in range(200000):
         print localtime
 	assert y_3 > 0
 	print y_2, y_3
-        print("step %d, training accuracy %g, cost %g" % (i, train_accuracy, train_cost))
+        print("step %d, training accuracy %g, loss %g" % (i, train_accuracy, train_cost))
 
     if i % 25 == 0:
-        val_accuracy = sess.run(accuracy, feed_dict={
-            x: val_images, y_: val_labels, keep_prob: 1.0})
-        #val_writer.add_summary(summary, i)
+        val_accuracy = sess.run(accuracy, feed_dict={x: val_images, y_: val_labels, keep_prob: 1.0})
         print("validation set accuracy %g" % val_accuracy)
