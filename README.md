@@ -13,6 +13,6 @@ usage: python classify.py
 
 ###caffe:
 
-alexnet, googlenet, resnet2
+alexnet, vgg_2, googlenet, resnet2
 
 
