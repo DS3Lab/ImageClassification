@@ -63,6 +63,8 @@ def load_all_images(class_ids, num_images):
     num_classes = len(class_ids)
     all_images = []
     all_labels = []
+# Here mark is the total number of training examples we will load.
+# can delete it if using all training examples, and delete the "and mark > 0" in the if-clause below
     mark = 300
 
     for index, class_id in enumerate(class_ids):
