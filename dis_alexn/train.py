@@ -5,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 import time
 
+# maximal number of images for each class, can be modified
 NUM_IMAGES = 1000
 
 def weight_variable(shape):
@@ -32,7 +33,8 @@ def fc_batch_normalization(x):
     mean, variance = tf.nn.moments(x, axes=[0])
     return tf.nn.batch_normalization(x, mean, variance, None, None, 0.0001)
 
-
+# host name for ps and workers, split by ','
+# one may have multipel parameter servers and multiple workers
 parameter_servers = ["sgs-gpu-01:2222"]
 workers = ["sgs-gpu-02:2222", "sgs-gpu-03:2222"]
 #workers = ["spaceml1:2222"]
@@ -40,6 +42,11 @@ workers = ["sgs-gpu-02:2222", "sgs-gpu-03:2222"]
 cluster = tf.train.ClusterSpec({"ps":parameter_servers, "worker":workers})
 
 # input flags
+# in this example, the input should be like:
+# python train.py --job_name="ps" --task_index=0 [on sgs-gpu-01]
+# python train.py --job_name="worker" --task_index=0 [on sgs-gpu-02]
+# python train.py --job_name="worker" --task_index=1 [on sgs-gpu-03]
+
 tf.app.flags.DEFINE_string("job_name", "", "Either 'ps' or 'worker'")
 tf.app.flags.DEFINE_integer("task_index", 0, "Index of task within the job")
 FLAGS = tf.app.flags.FLAGS
@@ -69,6 +76,8 @@ if FLAGS.job_name == "ps":
     server.join()
 
 # if it is a worker who is responsible for computing, go on with calculating gradiants and updated values
+# if using GPUs, delete "/cpu:0" in "/job:worker/task:%d/cpu:0"
+# if using CPUs, keep it and specify "export CUDA_VISIBLE_DEVICES=" in the terminal before "python train.py ..."
 elif FLAGS.job_name == "worker":
     with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d/cpu:0" % FLAGS.task_index,
         cluster=cluster)):
