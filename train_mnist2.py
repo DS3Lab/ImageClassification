@@ -4,8 +4,12 @@ import tensorflow as tf
 import sys
 import time
 
+# with this ps and worker setting, run the command:
+# CUDA_VISIBLE_DEVICES=0 python train_mnist2.py --job_name="ps" --task_index=0 , on sgs-gpu-03
+# CUDA_VISIBLE_DEVICES=0 python train_mnist2.py --job_name="worker" --task_index=0, on sgs-gpu-01
+# CUDA_VISIBLE_DEVICES=0 python train_mnist2.py --job_name="worker" --task_index=1, on spaceml1
 # cluster specification
-parameter_servers = ["spaceml1:2223"]
+parameter_servers = ["sgs-gpu-03:2223"]
 workers = ["sgs-gpu-01:2222", 
 			"spaceml1:2224"]
 cluster = tf.train.ClusterSpec({"ps":parameter_servers, "worker":workers})
