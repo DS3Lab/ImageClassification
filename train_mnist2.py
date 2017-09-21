@@ -25,7 +25,7 @@ server = tf.train.Server(
 batch_size = 100
 learning_rate = 0.0005
 training_epochs = 20
-logs_path = "/mnt/ds3lab/litian/logs"
+logs_path = "/mnt/ds3lab/litian/logs" # may change it
 
 # load mnist data set
 from tensorflow.examples.tutorials.mnist import input_data
