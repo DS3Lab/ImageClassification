@@ -35,8 +35,8 @@ def fc_batch_normalization(x):
 
 # host name for ps and workers, split by ','
 # one may have multipel parameter servers and multiple workers
-parameter_servers = ["sgs-gpu-01:2222"]
-workers = ["sgs-gpu-02:2222", "sgs-gpu-03:2222"]
+parameter_servers = ["spaceml1:2223"]
+workers = ["spaceml1:2222", "sgs-gpu-03:2224"]
 #workers = ["spaceml1:2222"]
 
 cluster = tf.train.ClusterSpec({"ps":parameter_servers, "worker":workers})
@@ -58,7 +58,7 @@ server = tf.train.Server(cluster, job_name=FLAGS.job_name, task_index=FLAGS.task
 
 
 list_ = []
-for line in open("/home/litian/data/label.txt"):
+for line in open("/mnt/ds3lab/tf_imagenet/labels.txt"):
     list_.append(['a', line.strip('\n')])
 classes = np.array(list_)
 print len(classes)
@@ -79,7 +79,7 @@ if FLAGS.job_name == "ps":
 # if using GPUs, delete "/cpu:0" in "/job:worker/task:%d/cpu:0"
 # if using CPUs, keep it and specify "export CUDA_VISIBLE_DEVICES=" in the terminal before "python train.py ..."
 elif FLAGS.job_name == "worker":
-    with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d/cpu:0" % FLAGS.task_index,
+    with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d" % FLAGS.task_index,
         cluster=cluster)):
     # all the 'parameters' defined under "with ...replica_device_setter" 
     # will be maintained in the parameter-sserver

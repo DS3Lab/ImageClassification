@@ -8,8 +8,8 @@ from scipy import misc
 # Minimum size will eliminate single pixel and flickr missing photo images
 MINIMUM_FILE_SIZE = 5000
 
+#IMAGE_DIRECTORY = "/mnt/ds3lab/datasets/MNIST/basic/train"
 IMAGE_DIRECTORY = "/mnt/ds3lab/tf_imagenet/data_20000"
-
 RAW_IMAGE_HEIGHT = 256
 RAW_IMAGE_WIDTH = 256
 
